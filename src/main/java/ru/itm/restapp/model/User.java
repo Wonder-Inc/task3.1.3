@@ -1,22 +1,32 @@
 package ru.itm.restapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", unique = true)
+    @NotEmpty(message = "Имя пользователя не должно быть пустым")
+    @Size(min = 2, max = 15, message = "Длина от 5 до 15 символов")
     private String username;
     
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
+    @NotEmpty(message = "Пароль не должен быть пустым")
+    @Size(min = 3, message = "Длина не меньше 3 символов")
     private String password;
     
     @Column(name = "first_name")
@@ -25,13 +35,15 @@ public class User implements UserDetails {
     @Column(name = "last_name")
     private String lastName;
     
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", unique = true)
+    @NotEmpty(message = "Почта не должна быть пустой")
+    @Email
     private String email;
     
     @Column(name = "phone", unique = true)
     private String phone;
     
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"), foreignKey = @ForeignKey(name = "FK_USERS_ROLES"),
             inverseJoinColumns = @JoinColumn(name = "role_id"), inverseForeignKey = @ForeignKey(name = "FK_ROLES_USERS"))
@@ -143,8 +155,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-    
-
     
     @Override
     public String toString() {
