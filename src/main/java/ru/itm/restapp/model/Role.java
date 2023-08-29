@@ -23,7 +23,7 @@ public class Role implements GrantedAuthority {
     @Column(name = "description")
     private String description;
     
-    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "role_id"), foreignKey = @ForeignKey(name = "FK_ROLES_USERS"),
             inverseJoinColumns = @JoinColumn(name = "user_id"), inverseForeignKey = @ForeignKey(name = "FK_USERS_ROLES"))

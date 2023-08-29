@@ -43,7 +43,7 @@ public class User implements UserDetails {
     @Column(name = "phone", unique = true)
     private String phone;
     
-    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"), foreignKey = @ForeignKey(name = "FK_USERS_ROLES"),
             inverseJoinColumns = @JoinColumn(name = "role_id"), inverseForeignKey = @ForeignKey(name = "FK_ROLES_USERS"))
