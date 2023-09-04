@@ -1,70 +1,58 @@
 package ru.itm.restapp.controller;
 
-import jakarta.validation.Valid;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.itm.restapp.dto.UserDto;
+import ru.itm.restapp.mapper.UserMapper;
 import ru.itm.restapp.model.User;
 import ru.itm.restapp.service.UserService;
 
 import java.security.Principal;
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/admin")
 public class AdminController {
     private final UserService userService;
+    private final UserMapper userMapper;
     
-    public AdminController(UserService userService) {
+    public AdminController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
     
     @GetMapping
-    public String showAdminInfo(ModelMap modelMap, Principal principal) {
-        modelMap.addAttribute("user", userService.loadUserByUsername(principal.getName()));
-        return "admin";
+    public ResponseEntity<UserDto> getUser(Principal principal) {
+        return ResponseEntity.status(HttpStatus.OK).body(userMapper.toDto((User) userService
+                .loadUserByUsername(principal.getName())));
     }
     
     @GetMapping("/allUsers")
-    public String listUsers(ModelMap modelMap) {
-        modelMap.addAttribute("users", userService.listUsers());
-        return "admin/allUsers";
+    public ResponseEntity<List<UserDto>> getUsers() {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
     }
     
-    @GetMapping("/new")
-    public String getForm(@ModelAttribute("user") User user) {
-        return "admin/new";
-    }
-    
-    @PostMapping
-    public String create(@ModelAttribute("user") @Valid User user,
-                         @RequestParam("allRoles") List<Long> ids) {
-        userService.create(user, ids);
-        return "redirect:/admin/allUsers";
+    @PostMapping(value = "/new", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(user));
     }
     
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable("id") Long id) {
+    public ResponseEntity<HttpStatus> delete(@PathVariable("id") Long id) {
         userService.delete(id);
-        return "redirect:/admin/allUsers";
+        return ResponseEntity.ok(HttpStatus.OK);
     }
     
-    @GetMapping("/{id}/edit")
-    public String updateForm(@PathVariable("id") Long id, ModelMap modelMap) {
-        modelMap.addAttribute("user", userService.showUser(id));
-        return "admin/edit";
-    }
-    
-    @PutMapping("/{id}")
-    public String edit(@Valid User user, @RequestParam("rolesIds") List<Long> rolesIds,
-                       @PathVariable("id") Long userId) {
-        userService.update(user, rolesIds, userId);
-        return "redirect:/admin/allUsers";
+    @PutMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> update(@RequestBody UserDto user, @PathVariable("id") Long id) {
+        user.setId(id);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.update(user));
     }
     
     @GetMapping("/{id}")
-    public String showUserInfo(@PathVariable("id") Long id, ModelMap modelMap) {
-        modelMap.addAttribute("user", userService.showUser(id));
-        return "admin/showUser";
+    public ResponseEntity<UserDto> getUser(@PathVariable("id") Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findById(id));
     }
 }
